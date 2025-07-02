@@ -10,6 +10,11 @@
     'data': [
         'security/security.xml',
         'data/cron.xml',
+        'data/auto_send_order.xml',
+        'data/cron_status_prestashop.xml',
+        'data/croncheckstatus.xml',
+        'data/stock_cron.xml',
+        'data/stock_update_orderline.xml',
         'views/stock_website_orders.xml',
         'security/ir.model.access.csv',
         'report/custome_paper_format.xml',
