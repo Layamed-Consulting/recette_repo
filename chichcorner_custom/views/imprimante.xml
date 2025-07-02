@@ -1,0 +1,54 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<odoo>
+    <!--
+    <data>
+
+        <record id="view_api_key_tree" model="ir.ui.view">
+            <field name="name">zebra.printer.tree</field>
+            <field name="model">zebra.printer</field>
+            <field name="arch" type="xml">
+                <tree>
+                    <field name="name"/>
+                    <field name="ip_address"/>
+                    <field name="port"/>
+                    <field name="user_id"/>
+                    <field name="location_id"/>
+                </tree>
+            </field>
+        </record>
+
+        <record id="view_api_key_form" model="ir.ui.view">
+            <field name="name">zebra.printer.form</field>
+            <field name="model">zebra.printer</field>
+            <field name="arch" type="xml">
+                <form string="Zebra Printer">
+                    <sheet>
+                        <group>
+                            <field name="name"/>
+                            <field name="ip_address"/>
+                            <field name="port"/>
+                            <field name="user_id"/>
+                            <field name="location_id"/>
+                        </group>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="action_zebra_printer" model="ir.actions.act_window">
+            <field name="name">zebra printer</field>
+            <field name="res_model">zebra.printer</field>
+            <field name="view_mode">tree,form</field>
+            <field name="target">current</field>
+        </record>
+
+        <menuitem id="zebra_printer_menu"
+                  name="Ip Adresse"
+                  parent="base.menu_users"
+                  action="action_zebra_printer"
+                  sequence="100"/>
+
+    </data>
+        -->
+</odoo>

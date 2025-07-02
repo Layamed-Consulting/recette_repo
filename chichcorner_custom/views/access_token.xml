@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+ <odoo>
+    <!--
+     Tree View
+    <record id="view_api_token_tree" model="ir.ui.view">
+        <field name="name">api.access.token.tree</field>
+        <field name="model">api.access.token</field>
+        <field name="arch" type="xml">
+            <tree string="API Tokens">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="token"/>
+                <field name="expiration_date"/>
+                <field name="is_active"/>
+            </tree>
+        </field>
+    </record>
+
+    <record id="view_api_token_form" model="ir.ui.view">
+        <field name="name">api.access.token.form</field>
+        <field name="model">api.access.token</field>
+        <field name="arch" type="xml">
+            <form string="API Token">
+                <header>
+                    <button name="generate_token" string="Generate New Token" type="object" class="oe_highlight"
+                            attrs="{'invisible': [('token', '!=', False)]}"/>
+                </header>
+                <sheet>
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="user_id"/>
+                            <field name="token" readonly="1"/>
+                        </group>
+                        <group>
+                            <field name="expiration_date"/>
+                            <field name="is_active"/>
+                        </group>
+                    </group>
+                </sheet>
+            </form>
+        </field>
+    </record>
+
+    <record id="view_api_token_search" model="ir.ui.view">
+        <field name="name">api.access.token.search</field>
+        <field name="model">api.access.token</field>
+        <field name="arch" type="xml">
+            <search string="Search API Tokens">
+                <field name="name"/>
+                <field name="user_id"/>
+                <field name="token"/>
+                <filter string="Active" name="active" domain="[('is_active', '=', True)]"/>
+                <filter string="Expired" name="expired" domain="[('expiration_date', '&lt;', context_today())]"/>
+                <group expand="0" string="Group By">
+                    <filter string="User" name="group_by_user" context="{'group_by': 'user_id'}"/>
+                    <filter string="Expiration Date" name="group_by_expiration" context="{'group_by': 'expiration_date'}"/>
+                </group>
+            </search>
+        </field>
+    </record>
+
+    <record id="action_api_token" model="ir.actions.act_window">
+        <field name="name">API Tokens</field>
+        <field name="res_model">api.access.token</field>
+        <field name="view_mode">tree,form</field>
+        <field name="context">{'search_default_active': 1}</field>
+        <field name="help" type="html">
+            <p class="o_view_nocontent_smiling_face">
+                Create your first API Token!
+            </p>
+            <p>
+                API Tokens are used to authenticate API requests.
+            </p>
+        </field>
+    </record>
+
+
+    <menuitem id="menu_api_token"
+              name="API Tokens"
+              parent="contacts.menu_contacts"
+              action="action_api_token"
+              sequence="1"/>
+-->
+</odoo>

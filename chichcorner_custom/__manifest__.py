@@ -1,0 +1,80 @@
+# -*- coding: utf-8 -*-
+{
+    'name': "Chic Corner Custom",
+    'description': "Chic Corner Custom",
+    'summary': "",
+    'author': 'LAYAMED',
+    'category': 'base',
+    'version': '1.0',
+    'depends': ['base', 'stock_barcode', 'product', 'account', 'stock', 'sale', 'purchase', 'sale_stock', 'purchase_stock'],
+    'auto_install': True,
+    'data': [
+        'data/cron.xml',
+        'security/ir.model.access.csv',
+        'views/product_view.xml',
+        'report/report_product_label.xml',
+        'views/label_importation.xml',
+        'report/label_importation_report.xml',
+        'report/purchase_order_inherit.xml',
+        'report/label_importation_content.xml',
+        'report/custome_paper_format.xml',
+        'report/product_solde_template.xml',
+        'report/custome_paper_format.xml',
+        'report/template_print.xml',
+        'report/template_solde.xml',
+        'report/products_with_ecart.xml',
+        'views/transaction_session.xml',
+        'views/transaction_report.xml',
+        'views/stock_quant_view.xml',
+        'views/purchase_order_view.xml',
+        'views/access_token.xml',
+        'views/report_template.xml',
+        # for journal
+        'report/sale_report.xml',
+
+        'report/gift_card_inherit.xml',
+        'report/gift_card_template_inherit.xml',
+        'report/transaction_report.xml',
+        'views/gift_card_view.xml',
+        'views/api_key_views.xml',
+        #'views/product_viewinherit.xml',
+        'views/imprimante.xml',
+        #'report/print_accounting.xml',
+        'views/stan_order.xml',
+        'views/pos_payment_screen.xml',
+        #'views/pos_payment_stan_view.xml',
+        'views/pos_order_vendor.xml',
+        'views/transaction_menu.xml',
+        'wizards/custom_label_view.xml',
+        'views/report_with_tax.xml',
+        'report/bon_sortie_report.xml',
+        'report/bon_sortie_template.xml',
+        'report/bon_sortie_template_print.xml',
+
+        #website part
+        'views/stock_website_orders.xml',
+        #'views/pos_payment_methode.xml',
+        #'views/account_journal.xml',
+        #'views/pos_payment_stan.xml',
+        #'report/print_header.xml',
+        # 'views/point_of_sale_receipt.xml',
+        # 'report/report_view.xml'
+    ],
+    'assets': {
+        'web.assets_backend': [
+         #   'chichcorner_custom/static/src/models/barcode_picking_model.js',
+            'chichcorner_custom/static/src/js/stock_quant_auto_print.js',
+            'chichcorner_custom/static/src/js/print_direct.js',
+
+        ],
+        'point_of_sale._assets_pos': [
+            'chichcorner_custom/static/src/app/**/*',
+            #'chichcorner_custom/static/src/xml/*',
+            #'chichcorner_custom/static/src/xml/CancelDiscountButton.js',
+        ],
+        'web.report_assets_common': [
+            'chichcorner_custom/static/src/css/report.css',
+            #'chichcorner_custom/static/src/css/bonsortie.css',
+        ],
+    }
+}

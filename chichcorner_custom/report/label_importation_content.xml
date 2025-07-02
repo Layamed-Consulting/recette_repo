@@ -1,0 +1,26 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_label_importation_template">
+        <t t-call="web.external_layout">
+            <t t-set="doc" t-value="docs"/>
+            <main>
+                <div class="page" style="display: flex; margin-top:4px; flex-direction: column; justify-content: center; align-items: center;">
+                    <div style="text-align: center; font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; color: #333333;">
+                        <span style="font-size: 12px; color: black; font-weight: bold;">Importation au Maroc</span>
+                    </div>
+                    <div style="font-size: 12px; font-weight: bold; display: flex; justify-content: center; align-items: center; color: #333333;">
+                        <span style="font-size: 11px; color: black; font-weight: bold;">SHOPAL</span>
+                        <span> </span> <!-- Spacer between texts -->
+                        <span style="font-size: 10px; color: black; font-weight: bold;">المستورد في المغرب شركة</span>
+                    </div>
+                    <div style="font-size: 10px;font-weight: bold; margin-top: 5px; font-style: italic; color: black;">
+                        IF 65966413  ت ض
+                    </div>
+                    <div style="font-size: 10px;font-weight: bold; margin-top: 5px; font-style: italic; color: black;">
+                        ICE 003628971000005
+                    </div>
+                </div>
+            </main>
+        </t>
+    </template>
+</odoo>

@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<odoo>
+    <record model="ir.ui.view" id="product_template_form_view_print_pdf">
+        <field name="name">product.template.form.print.pdf</field>
+        <field name="model">product.template</field>
+        <field name="inherit_id" ref="product.product_template_only_form_view"/>
+        <field name="arch" type="xml">
+            <xpath expr="//header/button" position="before">
+                <button string="Importation Au Maroc"
+                        type="object"
+                        name="action_print_product_pdf"
+                        class="btn btn-warning"
+                        icon="fa-print"/>
+            </xpath>
+        </field>
+    </record>
+</odoo>

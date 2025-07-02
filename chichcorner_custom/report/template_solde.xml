@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="report_producttemplatelabel_solde">
+        <t t-call="web.basic_layout">
+            <div class="page">
+                <t t-call="chichcorner_custom.report_productlabel_solde"/>
+            </div>
+        </t>
+    </template>
+</odoo>

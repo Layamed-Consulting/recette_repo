@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+        <template id="report_saledetails_inherited" inherit_id="point_of_sale.report_saledetails">
+            
+            <!-- Add the new column header
+            <xpath expr="//div[@id='sales']//table/thead/tr/th[last()]" position="after">
+                <th class="text-end">TOTAL TTC</th>
+            </xpath>
+                -->
+
+            <!-- Add the value for each product line
+            <xpath expr="//tr[@t-foreach='category[&quot;products&quot;]']" position="inside">
+                <td class="text-end">
+                    <t t-if="currency['position']">
+                        <span t-out='line["price_subtotal_incl"]' t-options="{'widget': 'float', 'precision': currency['precision']}"/>
+                        <span t-out='currency["symbol"]'/>
+                    </t>
+                    <t t-else="">
+                        <span t-out='currency["symbol"]'/>
+                        <span t-out='line["price_subtotal_incl"]' t-options="{'widget': 'float', 'precision': currency['precision']}"/>
+                    </t>
+                </td>
+            </xpath>-->
+        </template>
+    </data>
+</odoo>

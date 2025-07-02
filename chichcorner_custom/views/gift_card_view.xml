@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_pos_order_form_inherit_loyalty" model="ir.ui.view">
+        <field name="name">pos.order.form.inherit.loyalty</field>
+        <field name="model">pos.order</field>
+        <field name="inherit_id" ref="point_of_sale.view_pos_pos_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//field[@name='user_id']" position="after">
+                <!--
+                <field name="loyalty_card_ids" invisible="1"/>
+                <field name="related_loyalty_cards" string="Loyalty Cards" widget="many2many" readonly="1">
+                    <tree>
+                        <field name="code"/>
+                        <field name="points"/>
+                    </tree>
+                </field>
+                -->
+            </xpath>
+
+            <!--
+            <xpath expr="//field[@name='lines']/tree//field[@name='price_subtotal']" position="after">
+                <field name="order_loyalty_cards" widget="many2many_tags" readonly="1" options="{'no_create': True}">
+                    <tree>
+                        <field name="code"/>
+                        <field name="points"/>
+                    </tree>
+                </field>
+            </xpath>
+            -->
+
+        </field>
+    </record>
+</odoo>
