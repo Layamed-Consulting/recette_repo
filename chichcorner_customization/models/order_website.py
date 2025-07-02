@@ -22,7 +22,7 @@ class CustomerFetcher(models.TransientModel):
 
         try:
             _logger.info("Making API request to: %s", orders_url)
-            response = requests.get(orders_url, timeout=30)
+            response = requests.get(orders_url)
 
             if response.status_code == 200:
                 _logger.info("SUCCESS: API call successful!")
@@ -78,43 +78,31 @@ class CustomerFetcher(models.TransientModel):
 
                 customer_details = self._get_complete_customer_details(customer_url, address_delivery_url)
 
-                # Get or create contact
-                email = customer_details.get('email')
-                partner = self.env['res.partner'].search([('email', '=', email)], limit=1)
-                if not partner:
-                    partner = self.env['res.partner'].create({
-                        'name': f"{customer_details.get('firstname', '')} {customer_details.get('lastname', '')}".strip(),
-                        'email': email,
-                        'phone': customer_details.get('phone') or customer_details.get('phone_mobile'),
-                        'mobile': customer_details.get('phone_mobile'),
-                        'company_name': customer_details.get('company'),
-                        'street': customer_details.get('address1'),
-                        'street2': customer_details.get('address2'),
-                        'city': customer_details.get('city'),
-                        'zip': customer_details.get('postcode'),
-                        'country_id': self.env['res.country'].search([('name', '=', customer_details.get('country'))], limit=1).id if customer_details.get('country') else False,
-                    })
-                    _logger.info("Created new partner: %s", partner.name)
-                else:
-                    _logger.info("Partner already exists: %s", partner.name)
+                # Get or create/update contact based on phone and email
+                partner = self._find_or_create_partner(customer_details)
 
                 # Order info
                 date_commande_str = order.findtext('date_add', default='').strip()
-                date_commande = datetime.strptime(date_commande_str, '%Y-%m-%d %H:%M:%S').date() if date_commande_str else None
+                date_commande = datetime.strptime(date_commande_str,
+                                                  '%Y-%m-%d %H:%M:%S').date() if date_commande_str else None
                 reference = order.findtext('reference', default='').strip()
                 payment = order.findtext('payment', default='').strip()
+                if payment == "Paiement comptant à la livraison (Cash on delivery)":
+                    payment = "COD"
+                # Use PrestaShop data for order_rec, not Odoo partner data
                 order_rec = self.env['stock.website.order'].create({
                     'ticket_id': order_id,
                     'reference': reference,
-                    'client_name': partner.name,
-                    'email': partner.email,
-                    'phone': partner.phone,
-                    'mobile': partner.mobile,
-                    'adresse': partner.street,
-                    'second_adresse': partner.street2,
-                    'city': partner.city,
-                    'postcode': partner.zip,
-                    'pays': partner.country_id,
+                    'client_name': f"{customer_details.get('firstname', '')} {customer_details.get('lastname', '')}".strip(),
+                    'email': customer_details.get('email', ''),
+                    'phone': customer_details.get('phone', ''),
+                    'mobile': customer_details.get('phone_mobile', ''),
+                    'adresse': customer_details.get('address1', ''),
+                    'second_adresse': customer_details.get('address2', ''),
+                    'city': customer_details.get('city', ''),
+                    'postcode': customer_details.get('postcode', ''),
+                    'pays': self.env['res.country'].search([('name', '=', customer_details.get('country'))],
+                                                           limit=1) if customer_details.get('country') else False,
                     'date_commande': date_commande,
                     'payment_method': payment,
                 })
@@ -124,7 +112,7 @@ class CustomerFetcher(models.TransientModel):
 
                 for row in order_rows:
                     product_name = row.findtext('product_name', default='').strip()
-                    product_reference = row.findtext('product_reference', default='').strip()
+                    product_reference = row.findtext('product_ean13', default='').strip()
                     quantity = row.findtext('product_quantity', default='0').strip()
                     price = row.findtext('product_price', default='0.00').strip()
                     unit_price_incl = row.findtext('unit_price_tax_incl', default='0.00').strip()
@@ -139,6 +127,7 @@ class CustomerFetcher(models.TransientModel):
                     self.env['stock.website.order.line'].create({
                         'order_id': order_rec.id,
                         'product_id': product.id,
+                        'code_barre': product_reference,
                         'product_name': product.name,
                         'quantity': float(quantity),
                         'discount': float(row.findtext('total_discounts', default='0.00')),
@@ -157,6 +146,89 @@ class CustomerFetcher(models.TransientModel):
                 _logger.error("Failed to fetch order details for %s, status code: %s", order_id, response.status_code)
         except Exception as e:
             _logger.exception("Exception fetching details for order %s: %s", order_id, str(e))
+
+    def _find_or_create_partner(self, customer_details):
+        """Find existing partner or create/update based on phone and email matching"""
+        email = customer_details.get('email', '').strip().lower()
+        phone = customer_details.get('phone', '').strip()
+        phone_mobile = customer_details.get('phone_mobile', '').strip()
+        firstname = customer_details.get('firstname', '').strip()
+        lastname = customer_details.get('lastname', '').strip()
+        full_name = f"{firstname} {lastname}".strip()
+
+        partner = None
+
+        # Search for existing partner by phone (mobile or phone) and email
+        search_domain = []
+        if phone:
+            search_domain.append(('phone', '=', phone))
+        if phone_mobile:
+            if search_domain:
+                search_domain = ['|'] + search_domain + [('mobile', '=', phone_mobile)]
+            else:
+                search_domain.append(('mobile', '=', phone_mobile))
+
+        if email:
+            if search_domain:
+                search_domain = ['&', ('email', '=', email)] + search_domain
+            else:
+                search_domain.append(('email', '=', email))
+
+        if search_domain:
+            partners = self.env['res.partner'].search(search_domain)
+
+            # If multiple partners found, try to match by name (case insensitive)
+            if len(partners) > 1 and full_name:
+                for p in partners:
+                    if p.name and p.name.lower() == full_name.lower():
+                        partner = p
+                        break
+                # If no exact name match, take the first one
+                if not partner:
+                    partner = partners[0]
+            elif len(partners) == 1:
+                partner = partners[0]
+
+        # Prepare partner values with ALL PrestaShop data
+        country_id = False
+        if customer_details.get('country'):
+            country = self.env['res.country'].search([('name', '=', customer_details.get('country'))], limit=1)
+            if country:
+                country_id = country.id
+
+        partner_vals = {
+            'name': full_name,
+            'email': email,
+            'phone': phone,
+            'mobile': phone_mobile,
+            'company_name': customer_details.get('company', ''),
+            'street': customer_details.get('address1', ''),
+            'street2': customer_details.get('address2', ''),
+            'city': customer_details.get('city', ''),
+            'zip': customer_details.get('postcode', ''),
+            'country_id': country_id,
+        }
+
+        if partner:
+            # Always update existing partner with PrestaShop data (overwrite existing)
+            old_address = partner.street
+            partner.write(partner_vals)
+            _logger.info("UPDATED existing partner: %s", partner.name)
+            _logger.info("  - Old Address: '%s'", old_address or 'Empty')
+            _logger.info("  - New Address: '%s'", customer_details.get('address1', ''))
+            _logger.info("  - Email: %s", email)
+            _logger.info("  - Phone: %s", phone)
+            _logger.info("  - Mobile: %s", phone_mobile)
+            _logger.info("  - Address2: %s", customer_details.get('address2', ''))
+            _logger.info("  - City: %s", customer_details.get('city', ''))
+            _logger.info("  - PostCode: %s", customer_details.get('postcode', ''))
+            _logger.info("  - Country: %s", customer_details.get('country', ''))
+        else:
+            # Create new partner with all PrestaShop data
+            partner = self.env['res.partner'].create(partner_vals)
+            _logger.info("Created new partner: %s with all PrestaShop details", partner.name)
+
+        return partner
 
     def _get_complete_customer_details(self, customer_url, address_url):
         """Fetch complete customer details including address information"""
