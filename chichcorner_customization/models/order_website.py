@@ -12,17 +12,25 @@ class CustomerFetcher(models.TransientModel):
     _description = 'Customer Data Fetcher'
 
     API_BASE_URL = "https://www.premiumshop.ma/api"
-    WS_KEY = "E93WGT9K8726WW7F8CWIXDH9VGFBLH6A"
+    TOKEN = "E93WGT9K8726WW7F8CWIXDH9VGFBLH6A"
 
     @api.model
     def fetch_customer_data(self):
         _logger.info("Starting order data fetch...")
 
-        orders_url = f"{self.API_BASE_URL}/orders?ws_key={self.WS_KEY}"
+        # Get yesterday and today dates
+        today = datetime.now().date()
+        yesterday = today - timedelta(days=1)
+
+        # Format dates for API filter
+        date_filter = f"[{yesterday},{today}]"
+        orders_url = f"{self.API_BASE_URL}/orders?filter[date_add]={date_filter}&date=1"
 
         try:
             _logger.info("Making API request to: %s", orders_url)
-            response = requests.get(orders_url)
+
+            # Use basic authentication with token as username
+            response = requests.get(orders_url, auth=(self.TOKEN, ''))
 
             if response.status_code == 200:
                 _logger.info("SUCCESS: API call successful!")
@@ -63,9 +71,10 @@ class CustomerFetcher(models.TransientModel):
         _logger.info("Order data fetch completed")
 
     def _fetch_and_log_order_details(self, order_id):
-        order_url = f"{self.API_BASE_URL}/orders/{order_id}?ws_key={self.WS_KEY}"
+        order_url = f"{self.API_BASE_URL}/orders/{order_id}"
         try:
-            response = requests.get(order_url, timeout=30)
+            # Use basic authentication here too
+            response = requests.get(order_url, auth=(self.TOKEN, ''), timeout=30)
             if response.status_code == 200:
                 tree = ET.fromstring(response.content)
                 order = tree.find('order')
@@ -146,6 +155,85 @@ class CustomerFetcher(models.TransientModel):
                 _logger.error("Failed to fetch order details for %s, status code: %s", order_id, response.status_code)
         except Exception as e:
             _logger.exception("Exception fetching details for order %s: %s", order_id, str(e))
+
+    def _get_complete_customer_details(self, customer_url, address_url):
+        """Fetch complete customer details including address information"""
+        customer_details = {}
+
+        # Fetch customer basic info
+        if customer_url:
+            customer_data = self._fetch_api_data(customer_url)
+            if customer_data:
+                tree = ET.fromstring(customer_data)
+                customer_details.update({
+                    'firstname': self._get_text_content(tree, './/firstname'),
+                    'lastname': self._get_text_content(tree, './/lastname'),
+                    'email': self._get_text_content(tree, './/email'),
+                })
+
+        # Fetch address details
+        if address_url:
+            address_data = self._fetch_api_data(address_url)
+            if address_data:
+                tree = ET.fromstring(address_data)
+                customer_details.update({
+                    'phone': self._get_text_content(tree, './/phone'),
+                    'phone_mobile': self._get_text_content(tree, './/phone_mobile'),
+                    'company': self._get_text_content(tree, './/company'),
+                    'address1': self._get_text_content(tree, './/address1'),
+                    'address2': self._get_text_content(tree, './/address2'),
+                    'city': self._get_text_content(tree, './/city'),
+                    'postcode': self._get_text_content(tree, './/postcode'),
+                })
+
+                # Get country name if available
+                country_elem = tree.find('.//id_country')
+                if country_elem is not None:
+                    country_url = country_elem.attrib.get('{http://www.w3.org/1999/xlink}href')
+                    if country_url:
+                        country_data = self._fetch_api_data(country_url)
+                        if country_data:
+                            country_tree = ET.fromstring(country_data)
+                            country_name = self._get_text_content(country_tree, './/name')
+                            customer_details['country'] = country_name
+
+        return customer_details
+
+    def _fetch_api_data(self, url):
+        """Helper method to fetch data from API"""
+        try:
+            # Use basic authentication instead of ws_key
+            response = requests.get(url, auth=(self.TOKEN, ''), timeout=30)
+            if response.status_code == 200:
+                return response.content
+            else:
+                _logger.warning("Failed to fetch data from %s (status %s)", url, response.status_code)
+                return None
+        except Exception as e:
+            _logger.exception("Exception fetching data from %s: %s", url, str(e))
+            return None
+
+    def _get_customer_name(self, customer_url):
+        """Legacy method - kept for compatibility"""
+        if not customer_url:
+            return "Unknown"
+
+        try:
+            # Use basic authentication
+            response = requests.get(customer_url, auth=(self.TOKEN, ''), timeout=30)
+            if response.status_code == 200:
+                tree = ET.fromstring(response.content)
+                firstname = tree.find('.//firstname')
+                lastname = tree.find('.//lastname')
+                firstname_text = firstname.text if firstname is not None else ''
+                lastname_text = lastname.text if lastname is not None else ''
+                return f"{firstname_text} {lastname_text}".strip()
+            else:
+                _logger.warning("Failed to fetch customer data at %s (status %s)", customer_url, response.status_code)
+                return "Unknown"
+        except Exception as e:
+            _logger.exception("Exception fetching customer data from %s: %s", customer_url, str(e))
+            return "Unknown"
 
     def _find_or_create_partner(self, customer_details):
         """Find existing partner or create/update based on phone and email matching"""
@@ -229,62 +317,6 @@ class CustomerFetcher(models.TransientModel):
             _logger.info("Created new partner: %s with all PrestaShop details", partner.name)
 
         return partner
-
-    def _get_complete_customer_details(self, customer_url, address_url):
-        """Fetch complete customer details including address information"""
-        customer_details = {}
-
-        # Fetch customer basic info
-        if customer_url:
-            customer_data = self._fetch_api_data(f"{customer_url}?ws_key={self.WS_KEY}")
-            if customer_data:
-                tree = ET.fromstring(customer_data)
-                customer_details.update({
-                    'firstname': self._get_text_content(tree, './/firstname'),
-                    'lastname': self._get_text_content(tree, './/lastname'),
-                    'email': self._get_text_content(tree, './/email'),
-                })
-
-        # Fetch address details
-        if address_url:
-            address_data = self._fetch_api_data(f"{address_url}?ws_key={self.WS_KEY}")
-            if address_data:
-                tree = ET.fromstring(address_data)
-                customer_details.update({
-                    'phone': self._get_text_content(tree, './/phone'),
-                    'phone_mobile': self._get_text_content(tree, './/phone_mobile'),
-                    'company': self._get_text_content(tree, './/company'),
-                    'address1': self._get_text_content(tree, './/address1'),
-                    'address2': self._get_text_content(tree, './/address2'),
-                    'city': self._get_text_content(tree, './/city'),
-                    'postcode': self._get_text_content(tree, './/postcode'),
-                })
-
-                # Get country name if available
-                country_elem = tree.find('.//id_country')
-                if country_elem is not None:
-                    country_url = country_elem.attrib.get('{http://www.w3.org/1999/xlink}href')
-                    if country_url:
-                        country_data = self._fetch_api_data(f"{country_url}?ws_key={self.WS_KEY}")
-                        if country_data:
-                            country_tree = ET.fromstring(country_data)
-                            country_name = self._get_text_content(country_tree, './/name')
-                            customer_details['country'] = country_name
-
-        return customer_details
-
-    def _fetch_api_data(self, url):
-        """Helper method to fetch data from API"""
-        try:
-            response = requests.get(url, timeout=30)
-            if response.status_code == 200:
-                return response.content
-            else:
-                _logger.warning("Failed to fetch data from %s (status %s)", url, response.status_code)
-                return None
-        except Exception as e:
-            _logger.exception("Exception fetching data from %s: %s", url, str(e))
-            return None
 
     def _get_text_content(self, tree, xpath):
         """Helper method to safely extract text content from XML"""
