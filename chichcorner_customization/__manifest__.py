@@ -15,6 +15,8 @@
         'data/croncheckstatus.xml',
         'data/stock_cron.xml',
         'data/stock_update_orderline.xml',
+        'data/odoo_stock_pointer.xml',
+        'data/sendit_status.xml',
         'views/stock_website_orders.xml',
         'security/ir.model.access.csv',
         'report/custome_paper_format.xml',
