@@ -52,7 +52,6 @@
     ],
     'assets': {
         'web.assets_backend': [
-            'chichcorner_customization/static/src/models/barcode_picking.js',
             'chichcorner_customization/static/src/js/print_direct.js',
             'chichcorner_customization/static/src/js/stock_quant_auto_print.js',
         ],
