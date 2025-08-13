@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="pos_loyalty.ProductScreen" t-inherit="point_of_sale.ProductScreen" t-inherit-mode="extension">
+        <xpath expr="//OrderWidget/t[@t-set-slot='details']" position="inside">
+            <!-- Check if partner has NOTVIP category -->
+            <t t-set="isNotVipPartner" t-value="!(pos.get_order()?.get_partner()?.category_id || []).some(id =>
+                         (pos.partner_categories || []).find(c => c.id === id)?.display_name === 'FID')" />
+            <!-- Show message for NOTVIP partners -->
+            <div t-if="isNotVipPartner"
+                 class="w-100 border-top mt-auto fw-bolder d-flex flex-column px-3 py-2 bg-200">
+                <div class="text-center text-muted">
+                    Ce client n'a pas de programme de fidélité
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>
