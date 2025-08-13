@@ -57,7 +57,8 @@
             'chichcorner_customization/static/src/js/stock_quant_auto_print.js',
         ],
         'point_of_sale._assets_pos': [
-           'chichcorner_customization/static/src/app/**/*',
+            'chichcorner_customization/static/src/app/**/*',
+            'chichcorner_customization/static/src/**/*',
         ],
         'web.report_assets_common': [
             'chichcorner_customization/static/src/css/report.css',

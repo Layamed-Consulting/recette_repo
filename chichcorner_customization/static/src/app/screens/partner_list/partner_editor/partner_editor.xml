@@ -1,0 +1,44 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<templates id="template" xml:space="preserve">
+    <t t-name="custom_PartnerDetailsEdit" t-inherit="point_of_sale.PartnerDetailsEdit" t-inherit-mode="extension">
+        <!-- Add category field after the country dropdown -->
+        <xpath expr="//div[@class='partner-detail col'][label[@for='country']]" position="after">
+            <div class="partner-detail col">
+                <label class="form-label label">Étiquette</label>
+                <div class="category-selection" style="max-height: 120px; overflow-y: auto; border: 1px solid #ced4da; border-radius: 0.375rem; padding: 0.5rem;">
+                    <!-- Display currently selected categories -->
+                    <div t-if="changes.category_id.length > 0" class="selected-categories mb-2">
+                        <small class="text-muted">Sélectionnés : </small>
+                        <t t-foreach="changes.category_id" t-as="selectedId" t-key="selectedId">
+                            <t t-set="selectedCategory" t-value="(pos.partner_categories || []).find(cat => cat.id === selectedId)" />
+                            <t t-set="colorIndex" t-value="selectedId % 4" />
+                            <t t-set="bgColor" t-value="colorIndex === 0 ? '#1C6EA4' : colorIndex === 1 ? '#F5BABB' : colorIndex === 2 ? '#BB6653' : '#689B8A'" />
+                            <span t-if="selectedCategory" class="me-1 mb-1 d-inline-block" t-attf-style="background-color: {{bgColor}}; color: white; font-weight: bold; padding: 0.25rem 0.5rem; border-radius: 15px; font-size: 0.8rem;">
+                                <t t-esc="selectedCategory.name" />
+                                <button type="button" class="ms-1" style="background: none; border: none; color: white; font-weight: bold; font-size: 0.7rem; cursor: pointer; padding: 0; margin-left: 5px;" t-on-click="() => this.removeCategory(selectedId)">×</button>
+                            </span>
+                        </t>
+                    </div>
+                    <!-- Available categories to select -->
+                    <div class="available-categories">
+                        <small class="text-muted">Disponibles : </small>
+                        <t t-foreach="pos.partner_categories || []" t-as="category" t-key="category.id">
+                            <div t-if="!isCategorySelected(category.id)" class="form-check form-check-inline">
+                                <input
+                                    class="form-check-input"
+                                    type="checkbox"
+                                    t-attf-id="category_{{category.id}}"
+                                    t-on-click="() => this.addCategory(category.id)"
+                                    t-att="{'disabled': isFieldCommercialAndPartnerIsChild('category_id')}"
+                                />
+                                <label class="form-check-label" t-attf-for="category_{{category.id}}">
+                                    <small t-esc="category.name" />
+                                </label>
+                            </div>
+                        </t>
+                    </div>
+                </div>
+            </div>
+        </xpath>
+    </t>
+</templates>
