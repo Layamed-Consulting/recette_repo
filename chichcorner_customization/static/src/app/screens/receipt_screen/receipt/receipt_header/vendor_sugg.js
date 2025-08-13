@@ -2,6 +2,7 @@
 import { Order } from "@point_of_sale/app/store/models";
 import { patch } from "@web/core/utils/patch";
 
+const originalGetLoyaltyPoints = Order.prototype.getLoyaltyPoints;
 
 patch(Order.prototype, {
      setup(_defaultObj, options) {
@@ -25,4 +26,26 @@ patch(Order.prototype, {
     get_customer_suggestion() {
         return this.suggestion;
     },
+    getLoyaltyPoints() {
+
+        // Call original method:
+        const points = originalGetLoyaltyPoints.apply(this, arguments);
+
+        const partner = this.get_partner();
+        if (!partner) {
+            return points;
+        }
+
+        const categoryIds = partner.category_id || [];
+        const categoryNames = categoryIds.map(catId => {
+            const category = this.pos.partner_categories.find(c => c.id === catId);
+            return category ? category.display_name : '';
+        });
+
+        if (!categoryNames.includes('FID')) {
+            return [];
+        }
+
+        return points;
+    }
 });
