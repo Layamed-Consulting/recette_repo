@@ -3,6 +3,15 @@ import { patch } from "@web/core/utils/patch";
 import { PosStore } from "@point_of_sale/app/store/pos_store";
 
 patch(PosStore.prototype, {
+
+    async _processData(loadedData) {
+        await super._processData(loadedData);
+        // Process partner categories 07/08/2025
+        if (loadedData['res.partner.category']) {
+            this.partner_categories = loadedData['res.partner.category'];
+            console.log("[DEBUG] Loaded partner categories:", this.partner_categories);
+        }
+    },
     getReceiptHeaderData() {
        const order = this.get_order();
        const product = order.get_orderlines()?.[0]?.get_product();
