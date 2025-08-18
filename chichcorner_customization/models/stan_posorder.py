@@ -22,8 +22,10 @@ class AccountJournal(models.Model):
         self._check_existing_loyalty_cards(coupon_data)
         coupon_new_id_map = {k: k for k in coupon_data.keys() if k > 0}
 
-        # Filter out loyalty programs for client ID 34
+        # Filter out loyalty programs for clients without FID category
         filtered_coupon_data = {}
+        filtered_coupon_ids = set()  # Track which coupon IDs were filtered out
+
         for cid, data in coupon_data.items():
             partner_id = data.get('partner_id')
             program_id = data.get('program_id')
@@ -33,12 +35,17 @@ class AccountJournal(models.Model):
 
             if partner and program.program_type == 'loyalty':
                 if 'FID' not in partner.category_id.mapped('display_name'):
-                    # Skip creation of loyalty points for NOTVIP clients
+                    # Skip creation of loyalty points for non-FID clients
+                    filtered_coupon_ids.add(cid)
                     continue
 
             filtered_coupon_data[cid] = data
 
-        # Use the original logic, but with filtered coupon_data
+        # Update coupon_new_id_map to remove filtered coupon IDs
+        coupon_new_id_map = {k: k for k, v in coupon_data.items()
+                             if k > 0 and k not in filtered_coupon_ids}
+
+        # Use the filtered coupon_data
         coupon_data = filtered_coupon_data
 
         # --- Begin original logic from Odoo ---
@@ -73,11 +80,13 @@ class AccountJournal(models.Model):
             if not line.reward_identifier_code:
                 continue
             lines_per_reward_code[line.reward_identifier_code] |= line
+
+        # Fixed: Only process coupons that exist in both coupon_new_id_map and coupon_data
         for coupon in all_coupons:
-            if coupon.id in coupon_new_id_map:
+            if coupon.id in coupon_new_id_map and coupon_new_id_map[coupon.id] in coupon_data:
                 coupon.points += coupon_data[coupon_new_id_map[coupon.id]]['points']
-            for reward_code in coupon_data[coupon_new_id_map[coupon.id]].get('line_codes', []):
-                lines_per_reward_code[reward_code].coupon_id = coupon
+                for reward_code in coupon_data[coupon_new_id_map[coupon.id]].get('line_codes', []):
+                    lines_per_reward_code[reward_code].coupon_id = coupon
 
         new_coupons.with_context(action_no_send_mail=False)._send_creation_communication()
 
@@ -85,7 +94,7 @@ class AccountJournal(models.Model):
         coupon_per_report = defaultdict(list)
         for coupon in new_coupons | updated_gift_cards:
             if coupon.program_id not in report_per_program:
-                report_per_program[coupon.program_id] = coupon.program_id.communication_plan_ids.\
+                report_per_program[coupon.program_id] = coupon.program_id.communication_plan_ids. \
                     filtered(lambda c: c.trigger == 'create').pos_report_print_id
             for report in report_per_program[coupon.program_id]:
                 coupon_per_report[report.id].append(coupon.id)
@@ -108,8 +117,8 @@ class AccountJournal(models.Model):
                 'expiration_date': coupon.expiration_date,
                 'code': coupon.code,
             } for coupon in new_coupons if (
-                coupon.program_id.applies_on == 'future'
-                and coupon.program_id.program_type not in ['gift_card', 'ewallet']
+                    coupon.program_id.applies_on == 'future'
+                    and coupon.program_id.program_type not in ['gift_card', 'ewallet']
             )],
             'coupon_report': coupon_per_report,
         }
