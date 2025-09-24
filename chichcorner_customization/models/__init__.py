@@ -13,4 +13,5 @@ from . import report_inherit_pdf
 from . import order_website
 from . import stock_website_order
 from . import prestashop_stock
+from . import payroll_slip
 
