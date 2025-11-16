@@ -94,6 +94,7 @@ class WebsiteOrder(models.Model):
     API_BASE_URL = "https://www.premiumshop.ma/api"
     WS_KEY = "E93WGT9K8726WW7F8CWIXDH9VGFBLH6A"
     '''added in 07/07/2025'''
+
     def _check_and_update_order_status(self):
         """Check if all order lines are cancelled and update order status accordingly"""
         for order in self:
@@ -105,7 +106,7 @@ class WebsiteOrder(models.Model):
                     order.status = 'annuler'
                     # Log the change in chatter
                     order.message_post(
-                        body="Statut de la commande automatiquement mis à jour vers 'Annuler' car toutes les lignes de commande sont annulées.",
+                        body="Statut de la commande mis à jour vers 'Annuler' car toutes les lignes de commande sont annulées.",
                         message_type='notification'
                     )
 
@@ -236,7 +237,8 @@ class WebsiteOrder(models.Model):
                 colis_lines = active_lines.filtered(lambda l: l.numero_colis == colis_num)
 
                 # Calculate total amount for this colis
-                total_amount = sum(line.price * line.quantity for line in colis_lines)
+                #total_amount = sum(line.price * line.quantity for line in colis_lines)
+                total_amount = sum(line.price_payed for line in colis_lines)
 
                 # Prepare products description with name and barcode
                 products_description = ", ".join([
@@ -691,11 +693,6 @@ class WebsiteOrder(models.Model):
 
         except Exception as e:
             _logger.error(f"Cron job error: {str(e)}")
-
-
-
-
-
     #ramassage
     def action_create_pickup_request(self):
         """Create pickup request via SendIt API"""
@@ -868,6 +865,7 @@ class WebsiteOrder(models.Model):
                 'prepare': 9,
                 'encourdelivraison': 4,
                 'delivered': 5,
+                'annuler': 6,
             }
 
             prestashop_status_id = status_mapping.get(order.status)
@@ -1329,7 +1327,7 @@ class WebsiteOrder(models.Model):
 
         for line in lines:
             discount_amount = (line.discount or 0.0) / 100.0
-            price_unit = float(line.price)
+            price_unit = float(line.price_payed)
             qty = float(line.quantity)
             taxes = line.product_id.taxes_id.filtered(lambda t: t.company_id == self.env.company)
             tax_rate = taxes[0].amount / 100.0 if taxes else 0.20
@@ -1421,10 +1419,10 @@ class WebsiteOrder(models.Model):
 
         # Create the UID in the expected format: YYYY-MM-DD-NNN (14 characters including dashes)
         uid = f"{date_part}-{sequence_num}"
-
+        uidp = f"{order.payment_method}"
         # Include warehouse name in reference if provided
         if warehouse_name:
-            return f"WEB-{base_reference}-{warehouse_name}-{uid}"
+            return f"WEB-{base_reference}-{uidp}-{uid}"
         else:
             return f"{base_reference}-{uid}"
     def _update_order_lines_with_receipt_number(self, lines, order, warehouse_name):
@@ -1486,6 +1484,7 @@ class StockWebsiteOrderLine(models.Model):
     product_id = fields.Many2one('product.product', string="Produit")
     product_name = fields.Char(string="Nom du Produit")
     quantity = fields.Float(string="Quantité")
+    price_payed = fields.Float(string="Prix Payé", store=True)
     price = fields.Float(string="Prix", compute="_compute_price_from_pricelist", store=True)
     discount = fields.Float(string="Remise")
     magasin_name = fields.Char(string="Magasin", compute="_compute_magasin_and_stock", store=True,
