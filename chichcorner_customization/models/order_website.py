@@ -670,8 +670,11 @@ class CustomerFetcher(models.TransientModel):
                     'payment_method': payment,
                     'transportor': carrier_name,  # Add carrier name here
                 })
+                '''
                 total_shipping_str = order.findtext('total_shipping', default='0.00').strip()
                 total_shipping = float(total_shipping_str) if total_shipping_str else 0.0
+                
+                '''
                 total_red_str = order.findtext('total_discounts', default='0.00').strip()
                 total_red = float(total_red_str) if total_red_str else 0.0
                 total_global_str = order.findtext('total_paid', default='0.00').strip()
@@ -705,7 +708,6 @@ class CustomerFetcher(models.TransientModel):
                         'quantity': float(quantity),
                         'discount': float(row.findtext('total_discounts', default='0.00')),
                         'price': float(price),
-                        'shipped_price': total_shipping,
                         'reduction_total': total_red,
                         'global_payed': total_global,
                         'reduction_value': reduction_percent,
