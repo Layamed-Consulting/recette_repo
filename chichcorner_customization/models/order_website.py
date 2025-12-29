@@ -673,15 +673,16 @@ class CustomerFetcher(models.TransientModel):
                 '''
                 total_shipping_str = order.findtext('total_shipping', default='0.00').strip()
                 total_shipping = float(total_shipping_str) if total_shipping_str else 0.0
-                
-                '''
                 total_red_str = order.findtext('total_discounts', default='0.00').strip()
+                
                 total_red = float(total_red_str) if total_red_str else 0.0
+                
                 total_global_str = order.findtext('total_paid', default='0.00').strip()
                 total_global = float(total_global_str) if total_global_str else 0.0
                 reduction_percent = 0.0
                 if total_global > 0:
                     reduction_percent = (total_red / total_global) * 100
+                '''
                 order_rows = order.findall('.//order_row')
                 total_amount = 0
 
@@ -708,9 +709,6 @@ class CustomerFetcher(models.TransientModel):
                         'quantity': float(quantity),
                         'discount': float(row.findtext('total_discounts', default='0.00')),
                         'price': float(price),
-                        'reduction_total': total_red,
-                        'global_payed': total_global,
-                        'reduction_value': reduction_percent,
                     })
 
                 total_paid = order.findtext('total_paid_tax_incl', default='0.00')
