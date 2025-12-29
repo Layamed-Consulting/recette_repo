@@ -35,12 +35,12 @@ class WebsiteOrder(models.Model):
         ('encourdelivraison', 'En cours de Livraison'),
         ('annuler', 'Annulé'),
     ], string="Statut", default='initial')
-    transportor = fields.Char(string="Mode de livraison", readonly=True)
     pos_order_id = fields.Many2one('pos.order', string="POS Order")
     '''added 07/07/2025'''
     colis_created = fields.Boolean(string="Colis Created", default=False, help="Indicates if colis have been created via SendIt API")
     colis_codes = fields.Text(string="Colis Codes", help="Store colis codes from SendIt API (JSON format)")
     label_url = fields.Char(string="Imprimer étiquette", help="URL of the generated labels PDF")
+    transportor = fields.Char(string="Mode de livraison", readonly=True)
     '''
     def action_send_to_pos(self):
         for order in self:
