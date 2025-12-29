@@ -29,11 +29,13 @@ class WebsiteOrder(models.Model):
     status = fields.Selection([
         ('initial', 'Initial'),
         ('prepare', 'Préparé'),
+        ('picked_up', 'Colis retiré'),
         ('delivered', 'Livré'),
         ('en_cours_preparation', 'En cours de préparation'),
         ('encourdelivraison', 'En cours de Livraison'),
         ('annuler', 'Annulé'),
     ], string="Statut", default='initial')
+    transportor = fields.Char(string="Mode de livraison", readonly=True)
     pos_order_id = fields.Many2one('pos.order', string="POS Order")
     '''added 07/07/2025'''
     colis_created = fields.Boolean(string="Colis Created", default=False, help="Indicates if colis have been created via SendIt API")
@@ -95,6 +97,9 @@ class WebsiteOrder(models.Model):
     WS_KEY = "E93WGT9K8726WW7F8CWIXDH9VGFBLH6A"
     '''added in 07/07/2025'''
 
+    def action_mark_picked_up(self):
+        for record in self:
+            record.status = 'picked_up'
     def _check_and_update_order_status(self):
         """Check if all order lines are cancelled and update order status accordingly"""
         for order in self:
