@@ -10,6 +10,7 @@
                 <field name="date_commande"/>
                 <field name="client_name"/>
                 <field name="payment_method"/>
+                <field name="transportor"/>
                 <field name="status"
                        widget="badge"
                        decoration-info="status == 'initial'"
@@ -72,6 +73,7 @@
                         <field name="status"/>
                         <field name="reference"/>
                         <field name="date_commande"/>
+                        <field name="transportor"/>
                     </group>
                     <group string="Détails du Client" colspan="2">
                         <group>
